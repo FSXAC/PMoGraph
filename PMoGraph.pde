@@ -1,11 +1,15 @@
 import java.util.*;
 
+float cubicCurve(float x, float u0, float u1, float u2, float u3) {
+  float nx = 1 - x;
+  return u0*pow(nx,3) + 3*u1*pow(nx,2)*x + 3*u2*nx*pow(x,2) + u3*pow(x,3);
+}
+
 enum TransitionType {
-  NONE,
   LINEAR,
-  QUADRATIC,
-  EASEOUT,
-  EASEIN
+  EASE,
+  PAUSE,
+  BOUNCE,
 }
 
 public class KeyFrameObject implements Comparable<KeyFrameObject> {
@@ -13,11 +17,11 @@ public class KeyFrameObject implements Comparable<KeyFrameObject> {
   int frame;
   TransitionType inTrans, outTrans;
   
-  public KeyFrameObject(float value, int frame, TransitionType transitionType) {
+  public KeyFrameObject(float value, int frame, TransitionType tin, TransitionType tout) {
     this.value = value;
     this.frame = frame;
-    this.inTrans = transitionType;
-    this.outTrans = TransitionType.NONE;
+    this.inTrans = tin;
+    this.outTrans = tout;
   }
   
   // For sorting
@@ -38,17 +42,13 @@ class KeyFrameTimeline {
   FloatList outputValues = new FloatList();
   Boolean outputIsValid = false;
   
-  public KeyFrameTimeline(float initialValue) {
-    
-    // Add inital keyframe
-    keyframes.add(new KeyFrameObject(initialValue, 0, TransitionType.NONE));
+  public KeyFrameTimeline() {
   }
   
-  public void addKeyFrame(float value, int frame, TransitionType transition) {
+  public void addKeyFrame(float value, int frame, TransitionType tin, TransitionType tout) {
     int lastIndex = keyframes.size() - 1; 
-    keyframes.add(new KeyFrameObject(value, frame, transition));
+    keyframes.add(new KeyFrameObject(value, frame, tin, tout));
     Collections.sort(this.keyframes);
-    keyframes.get(lastIndex).outTrans = transition;
     
     // Mark timeline as dirty
     this.outputIsValid = false;
@@ -73,19 +73,52 @@ class KeyFrameTimeline {
       
       TransitionType startTrans = this.keyframes.get(i).outTrans;
       TransitionType endTrans = this.keyframes.get(i + 1).inTrans;
-      if (startTrans != endTrans) {
-        println("ERROR: Keyframe inTrans and outTrans mismatched");
-        startTrans = TransitionType.LINEAR;
-      }
       
       for (int dt = 0; dt < totalFrames; dt++) { //<>//
         this.outputValues.append(0.0);
         int currentIndex = this.outputValues.size() - 1;
         float frac = (float) dt / totalFrames;
         
-        if (startTrans == TransitionType.LINEAR) {
-          this.outputValues.set(currentIndex, frac * (endVal - startVal) + startVal);
+        
+        float multiplier;
+        switch (startTrans) {
+          
+          case LINEAR:
+            switch (endTrans) {
+              case EASE: multiplier = cubicCurve(frac, 0, 0.9, 1, 1); break;
+              case BOUNCE: multiplier = cubicCurve(frac, 0, 0.9, 1.2, 1); break;
+              default: multiplier = frac;
+            }
+            break;
+            
+          case EASE:
+            switch (endTrans) {
+              case EASE: multiplier = cubicCurve(frac, 0, 0, 1, 1); break;
+              case BOUNCE: multiplier = cubicCurve(frac, 0, 0, 1.4, 1); break;
+              default: multiplier = cubicCurve(frac, 0, 0, 0.1, 1);
+            }
+            break;
+            
+          case PAUSE:
+            switch (endTrans) {
+              case PAUSE: multiplier = cubicCurve(frac, 0, 1, 0, 1); break;
+              default: multiplier = frac;
+            }
+            break;
+            
+          case BOUNCE:
+            switch (endTrans) {
+              case EASE: multiplier = cubicCurve(frac, 0, -0.4, 1, 1); break;
+              case BOUNCE: multiplier = cubicCurve(frac, 0, -0.4, 1.4, 1); break;
+              default: multiplier = cubicCurve(frac, 0, -0.2, 0.1, 1); break;
+            }
+            break;
+            
+          default:
+            multiplier = frac;
         }
+
+        this.outputValues.set(currentIndex, multiplier * (endVal - startVal) + startVal);
       }
     }
     
@@ -113,16 +146,17 @@ class KeyFrameTimeline {
 
 int t = 0;
 int T = 300;
-KeyFrameTimeline testTimeline = new KeyFrameTimeline(0);
+KeyFrameTimeline testTimeline = new KeyFrameTimeline();
 
 void setup() {
   size(800, 600);
-  testTimeline.addKeyFrame(100, 75, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(100, 100, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(300, 150, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(10, 200, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(150, 250, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(0, 300, TransitionType.LINEAR);
+  testTimeline.addKeyFrame(0, 0, TransitionType.LINEAR, TransitionType.EASE);
+  testTimeline.addKeyFrame(100, 75, TransitionType.EASE, TransitionType.LINEAR);
+  testTimeline.addKeyFrame(100, 100, TransitionType.EASE, TransitionType.EASE);
+  testTimeline.addKeyFrame(300, 150, TransitionType.LINEAR, TransitionType.LINEAR);
+  testTimeline.addKeyFrame(10, 200, TransitionType.EASE, TransitionType.EASE);
+  testTimeline.addKeyFrame(150, 250, TransitionType.EASE, TransitionType.EASE);
+  testTimeline.addKeyFrame(0, 300, TransitionType.EASE, TransitionType.EASE);
   
   //for (int i = 0; i < 300; i++) {
   //  print(testTimeline.getValue(i));

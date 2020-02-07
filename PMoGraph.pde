@@ -1,4 +1,4 @@
-import java.util.*; //<>//
+import java.util.*; //<>// //<>// //<>// //<>//
 
 int t = 0;
 int T = 300;
@@ -33,7 +33,14 @@ void setup() {
   
   background(255);
   
-  r1 = new MoRect(width/2, height/2);
+  r1 = new MoRect(width/2, height/2, 50, 50);
+  r1.x.addKeyFrame(200, 2);
+  r1.x.addKeyFrame(width/2, 4);
+  r1.x.setAllTransitions(TransitionType.EASE);
+  print(r1.x.keyframes);
+  r1.x.buildTimeline();
+  print(r1.x.outputValues);
+  r1.isPlaying = true;
 }
 
 void draw() {
@@ -42,8 +49,8 @@ void draw() {
   
   strokeWeight(3);
   stroke(0);
-  float v = testTimeline.getValue(t);
-  float v2 = tl2.getValue(t);
+  float v = testTimeline.get(t);
+  float v2 = tl2.get(t);
   
   line(width * t / T, height, width * t / T, height - v / 5);
   line(width * t / T, height - 100, width * t / T, height - v2 / 5 - 100);

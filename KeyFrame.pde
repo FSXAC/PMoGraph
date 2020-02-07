@@ -92,8 +92,8 @@ class KeyFrameTimeline {
   
   public void buildTimeline() {
     
-    println("Building keyframe timeline");
-    println(this.keyframes);
+    //println("Building keyframe timeline");
+    //println(this.keyframes);
     
     // Build the output list
     this.outputValues.clear();
@@ -163,8 +163,8 @@ class KeyFrameTimeline {
     
     // Mark timeline as updated
     this.outputIsValid = true;
-    println(this.outputValues.size());
-    println(this.outputValues.get(this.outputValues.size() - 1));
+    //println(this.outputValues.size());
+    //println(this.outputValues.get(this.outputValues.size() - 1));
   }
   
   public float get(int t) {

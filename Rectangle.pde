@@ -1,61 +1,57 @@
 class MoRect {
   
   // Center of the rectangle
-  private float x, y;
+  public KeyFrameTimeline x, y;
   
   // Width and height of the rectangle
-  private float w, h;
-  private float scaleX, scaleY;
+  public KeyFrameTimeline w, h;
   
   // Rotation in radians
-  private float rotation;
+  public KeyFrameTimeline rotation;
   
   // Shape properties
-  private color fillColor;
-  private color strokeColor;
-  private float strokeThickness;
+  public KeyFrameTimeline fillR, fillG, fillB;
+  public KeyFrameTimeline strokeR, strokeG, strokeB;
+  public KeyFrameTimeline strokeThickness;
   
   // Keyframe animation
   public Boolean isPlaying;
-  public KeyFrameTimeline timeline;
+  public Boolean isLooping;
+  private int t;
   
-  public MoRect(float x, float y) {
-    this.x = x;
-    this.y = y;
-    this.w = 50;
-    this.h = 50;
-    this.scaleX = 1;
-    this.scaleY = 1;
-    this.rotation = 0;
-    this.fillColor = color(255, 255, 255);
-    this.strokeColor = color(0);
-    this.strokeThickness = 1;
+  public MoRect(float x, float y, float w, float h) {
+    this.x = new KeyFrameTimeline(x);
+    this.y = new KeyFrameTimeline(y);
+    this.w = new KeyFrameTimeline(w);
+    this.h = new KeyFrameTimeline(h);
+    this.rotation = new KeyFrameTimeline(0);
+
+    this.fillR = new KeyFrameTimeline(255);
+    this.fillG = new KeyFrameTimeline(255);
+    this.fillB = new KeyFrameTimeline(255);
+    this.strokeR = new KeyFrameTimeline(0);
+    this.strokeG = new KeyFrameTimeline(0);
+    this.strokeB = new KeyFrameTimeline(0);
+
+    this.strokeThickness = new KeyFrameTimeline(1);
     
     this.isPlaying = false;
-    this.timeline = new KeyFrameTimeline();
-  }
-  
-  public void draw(PGraphics surf) {
-    surf.rectMode(CENTER);
-    surf.pushMatrix();
-    surf.translate(this.x, this.y);
-    surf.rotate(this.rotation);
-    surf.fill(this.fillColor);
-    surf.stroke(this.strokeColor);
-    surf.strokeWeight(this.strokeThickness);
-    surf.rect(0, 0, this.w * this.scaleX, this.h * this.scaleY);
-    surf.popMatrix();
+    this.t = 0;
   }
   
   public void draw() {
     rectMode(CENTER);
     pushMatrix();
-    translate(this.x, this.y);
-    rotate(this.rotation);
-    fill(this.fillColor);
-    stroke(this.strokeColor);
-    strokeWeight(this.strokeThickness);
-    rect(0, 0, this.w * this.scaleX, this.h * this.scaleY);
+    translate(this.x.get(this.t), this.y.get(this.t));
+    rotate(this.rotation.get(this.t));
+    fill(this.fillR.get(this.t), this.fillG.get(this.t), this.fillB.get(this.t));
+    stroke(this.strokeR.get(this.t), this.strokeG.get(this.t), this.strokeB.get(this.t));
+    strokeWeight(this.strokeThickness.get(this.t));
+    rect(0, 0, this.w.get(this.t), this.h.get(this.t));
     popMatrix();
+
+    if (this.isPlaying) {
+      this.t++;
+    }
   }
 }

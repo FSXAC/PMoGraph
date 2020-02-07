@@ -50,7 +50,20 @@ class KeyFrameTimeline {
   public KeyFrameTimeline() {
   }
   
+  public KeyFrameTimeline(float initValue) {
+    this.addKeyFrame(initValue, 0);
+  }
+  
   public void addKeyFrame(float value, int frame, TransitionType tin, TransitionType tout) {
+    for (KeyFrameObject k : this.keyframes) {
+      if (k.frame > frame) {
+        break;
+      } else if (k.frame == frame) {
+        this.keyframes.remove(k)
+        break;
+      }
+    }
+
     keyframes.add(new KeyFrameObject(value, frame, tin, tout));
     Collections.sort(this.keyframes);
     
@@ -153,15 +166,23 @@ class KeyFrameTimeline {
     println(this.outputValues.get(this.outputValues.size() - 1));
   }
   
-  public float getValue(int t) {
+  public float get(int t) {
     if (!this.outputIsValid) {
       this.buildTimeline();
     }
     
-    if (t < this.outputValues.size() - 1) {
+    // If only 1 keyframe then there is no such thing as t
+    if (this.outputValues.size() == 1) {
+      return this.outputValues.get(0);
+    }
+    else if (t < this.outputValues.size() - 1) {
       return this.outputValues.get(t);
     }
     
     return 0;
+  }
+  
+  public float get() {
+    return this.get(0);
   }
 }

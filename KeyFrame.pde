@@ -39,6 +39,7 @@ class KeyFrameTimeline {
   ArrayList<KeyFrameObject> keyframes = new ArrayList<KeyFrameObject>();
   FloatList outputValues = new FloatList();
   Boolean outputIsValid = false;
+  Boolean loopEnabled = true;
   
   // Ease attach is how fast the "rise time"
   // Default is 1. Lowest is 0.4 before we start to affect the linear part
@@ -59,7 +60,7 @@ class KeyFrameTimeline {
       if (k.frame > frame) {
         break;
       } else if (k.frame == frame) {
-        this.keyframes.remove(k)
+        this.keyframes.remove(k);
         break;
       }
     }
@@ -167,8 +168,13 @@ class KeyFrameTimeline {
   }
   
   public float get(int t) {
+
     if (!this.outputIsValid) {
       this.buildTimeline();
+    }
+
+    if (this.loopEnabled) {
+      t = t % this.outputValues.size();
     }
     
     // If only 1 keyframe then there is no such thing as t

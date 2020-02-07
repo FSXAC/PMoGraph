@@ -169,7 +169,7 @@ class KeyFrameTimeline {
   
   public float get(int t) {
 
-    if (!this.outputIsValid) {
+    if (!this.outputIsValid) { //<>//
       this.buildTimeline();
     }
 
@@ -181,7 +181,7 @@ class KeyFrameTimeline {
     if (this.outputValues.size() == 1) {
       return this.outputValues.get(0);
     }
-    else if (t < this.outputValues.size() - 1) {
+    else if (t < this.outputValues.size()) {
       return this.outputValues.get(t);
     }
     

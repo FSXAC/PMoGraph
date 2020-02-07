@@ -16,7 +16,6 @@ class MoRect {
   
   // Keyframe animation
   public Boolean isPlaying;
-  public Boolean isLooping;
   private int t;
   
   public MoRect(float x, float y, float w, float h) {
@@ -42,7 +41,8 @@ class MoRect {
   public void draw() {
     rectMode(CENTER);
     pushMatrix();
-    translate(this.x.get(this.t), this.y.get(this.t));
+    float x  = this.x.get(this.t); //<>//
+    translate(x, this.y.get(this.t));
     rotate(this.rotation.get(this.t));
     fill(this.fillR.get(this.t), this.fillG.get(this.t), this.fillB.get(this.t));
     stroke(this.strokeR.get(this.t), this.strokeG.get(this.t), this.strokeB.get(this.t));

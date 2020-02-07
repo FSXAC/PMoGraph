@@ -1,181 +1,58 @@
-import java.util.*;
-
-float cubicCurve(float x, float u0, float u1, float u2, float u3) {
-  float nx = 1 - x;
-  return u0*pow(nx,3) + 3*u1*pow(nx,2)*x + 3*u2*nx*pow(x,2) + u3*pow(x,3);
-}
-
-enum TransitionType {
-  LINEAR,
-  EASE,
-  PAUSE,
-  BOUNCE,
-}
-
-public class KeyFrameObject implements Comparable<KeyFrameObject> {
-  float value;
-  int frame;
-  TransitionType inTrans, outTrans;
-  
-  public KeyFrameObject(float value, int frame, TransitionType tin, TransitionType tout) {
-    this.value = value;
-    this.frame = frame;
-    this.inTrans = tin;
-    this.outTrans = tout;
-  }
-  
-  // For sorting
-  @Override
-  public int compareTo(KeyFrameObject other) {
-    return this.frame - other.frame;
-  }
-  
-  // For string rep
-  @Override
-  public String toString() {
-    return "{v=" + this.value + ",t=" + this.frame + ",trans=" + this.inTrans + "/" + this.outTrans + "}";
-  }
-}
-
-class KeyFrameTimeline {
-  ArrayList<KeyFrameObject> keyframes = new ArrayList<KeyFrameObject>();
-  FloatList outputValues = new FloatList();
-  Boolean outputIsValid = false;
-  
-  public KeyFrameTimeline() {
-  }
-  
-  public void addKeyFrame(float value, int frame, TransitionType tin, TransitionType tout) {
-    int lastIndex = keyframes.size() - 1; 
-    keyframes.add(new KeyFrameObject(value, frame, tin, tout));
-    Collections.sort(this.keyframes);
-    
-    // Mark timeline as dirty
-    this.outputIsValid = false;
-  }
-  
-  public void buildTimeline() {
-    
-    println("Building keyframe timeline");
-    println(this.keyframes);
-    
-    // Build the output list
-    this.outputValues.clear();
-    
-    // For each segment of the keyframes
-    for (int i = 0; i < this.keyframes.size() - 1; i++) {
-      int startFrame = this.keyframes.get(i).frame;
-      int endFrame = this.keyframes.get(i + 1).frame;
-      int totalFrames = endFrame - startFrame;
-      
-      float startVal = this.keyframes.get(i).value;
-      float endVal = this.keyframes.get(i + 1).value;
-      
-      TransitionType startTrans = this.keyframes.get(i).outTrans;
-      TransitionType endTrans = this.keyframes.get(i + 1).inTrans;
-      
-      for (int dt = 0; dt < totalFrames; dt++) { //<>//
-        this.outputValues.append(0.0);
-        int currentIndex = this.outputValues.size() - 1;
-        float frac = (float) dt / totalFrames;
-        
-        
-        float multiplier;
-        switch (startTrans) {
-          
-          case LINEAR:
-            switch (endTrans) {
-              case EASE: multiplier = cubicCurve(frac, 0, 0.9, 1, 1); break;
-              case BOUNCE: multiplier = cubicCurve(frac, 0, 0.9, 1.2, 1); break;
-              default: multiplier = frac;
-            }
-            break;
-            
-          case EASE:
-            switch (endTrans) {
-              case EASE: multiplier = cubicCurve(frac, 0, 0, 1, 1); break;
-              case BOUNCE: multiplier = cubicCurve(frac, 0, 0, 1.4, 1); break;
-              default: multiplier = cubicCurve(frac, 0, 0, 0.1, 1);
-            }
-            break;
-            
-          case PAUSE:
-            switch (endTrans) {
-              case PAUSE: multiplier = cubicCurve(frac, 0, 1, 0, 1); break;
-              default: multiplier = frac;
-            }
-            break;
-            
-          case BOUNCE:
-            switch (endTrans) {
-              case EASE: multiplier = cubicCurve(frac, 0, -0.4, 1, 1); break;
-              case BOUNCE: multiplier = cubicCurve(frac, 0, -0.4, 1.4, 1); break;
-              default: multiplier = cubicCurve(frac, 0, -0.2, 0.1, 1); break;
-            }
-            break;
-            
-          default:
-            multiplier = frac;
-        }
-
-        this.outputValues.set(currentIndex, multiplier * (endVal - startVal) + startVal);
-      }
-    }
-    
-    // Add final value
-    this.outputValues.append(this.keyframes.get(this.keyframes.size() - 1).value);
-    
-    // Mark timeline as updated
-    this.outputIsValid = true;
-    println(this.outputValues.size());
-    println(this.outputValues.get(this.outputValues.size() - 1));
-  }
-  
-  public float getValue(int t) {
-    if (!this.outputIsValid) {
-      this.buildTimeline();
-    }
-    
-    if (t < this.outputValues.size() - 1) {
-      return this.outputValues.get(t);
-    }
-    
-    return 0;
-  }
-}
+import java.util.*; //<>//
 
 int t = 0;
 int T = 300;
 KeyFrameTimeline testTimeline = new KeyFrameTimeline();
+KeyFrameTimeline tl2 = new KeyFrameTimeline();
+MoRect r1;
 
 void setup() {
   size(800, 600);
-  testTimeline.addKeyFrame(0, 0, TransitionType.LINEAR, TransitionType.EASE);
-  testTimeline.addKeyFrame(100, 75, TransitionType.EASE, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(100, 100, TransitionType.EASE, TransitionType.EASE);
-  testTimeline.addKeyFrame(300, 150, TransitionType.LINEAR, TransitionType.LINEAR);
-  testTimeline.addKeyFrame(10, 200, TransitionType.EASE, TransitionType.EASE);
-  testTimeline.addKeyFrame(150, 250, TransitionType.EASE, TransitionType.EASE);
-  testTimeline.addKeyFrame(0, 300, TransitionType.EASE, TransitionType.EASE);
   
-  //for (int i = 0; i < 300; i++) {
-  //  print(testTimeline.getValue(i));
-  //  print(", ");
-  //}
+  testTimeline.addKeyFrame(10, 0);
+  testTimeline.addKeyFrame(10, 50);
+  testTimeline.addKeyFrame(400, 100);
+  testTimeline.addKeyFrame(400, 130);
+  testTimeline.addKeyFrame(100, 170);
+  testTimeline.addKeyFrame(100, 220);
+  testTimeline.addKeyFrame(200, 250);
+  testTimeline.addKeyFrame(200, 270);
+  testTimeline.addKeyFrame(10, 300);
+  testTimeline.setAllTransitions(TransitionType.EASE);
+  
+  tl2.addKeyFrame(10, 0);
+  tl2.addKeyFrame(10, 50);
+  tl2.addKeyFrame(400, 100);
+  tl2.addKeyFrame(400, 130);
+  tl2.addKeyFrame(100, 170);
+  tl2.addKeyFrame(100, 220);
+  tl2.addKeyFrame(200, 250);
+  tl2.addKeyFrame(200, 270);
+  tl2.addKeyFrame(10, 300);
+  tl2.setAllTransitions(TransitionType.LINEAR);
+  
   background(255);
+  
+  r1 = new MoRect(width/2, height/2);
 }
-
 
 void draw() {
   
-  noStroke();
-  fill(255, 2);
-  rect(0, 0, width, height);
+  background(255);
   
   strokeWeight(3);
   stroke(0);
   float v = testTimeline.getValue(t);
-  line(width * t / T, height, width * t / T, height - v);
+  float v2 = tl2.getValue(t);
+  
+  line(width * t / T, height, width * t / T, height - v / 5);
+  line(width * t / T, height - 100, width * t / T, height - v2 / 5 - 100);
+  
+  fill(0);
+  ellipse(map(v, 10, 400, 100, width-100), height/2, 20, 20);
+  ellipse(map(v2, 10, 400, 100, width-100), height/2-100, 20, 20);
+  
+  r1.draw();
   
   if (t < T) t++;
   else t = 0;
